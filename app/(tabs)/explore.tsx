@@ -1,112 +1,169 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import {
+  DateTimePickerAndroid,
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+type AndroidMode = "date" | "time";
 
-export default function TabTwoScreen() {
+interface textInputType {
+  name: string;
+  birthdate?: Date;
+  email: string;
+  password: string;
+}
+
+export default function HomeScreen() {
+  const [textInput, setTextInput] = useState<textInputType>({
+    name: "",
+    birthdate: new Date(),
+    email: "",
+    password: "",
+  });
+
+  const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    const currentDate = selectedDate;
+    if (selectedDate) {
+      setTextInput((prev) => ({ ...prev, birthdate: currentDate }));
+    }
+  };
+
+  const showMode = (currentMode: AndroidMode) => {
+    DateTimePickerAndroid.open({
+      value: textInput.birthdate ?? new Date(),
+      onChange,
+      mode: currentMode,
+      is24Hour: true,
+    });
+  };
+
+  const showDatepicker = () => {
+    showMode("date");
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.pageContainer}>
+      <View style={styles.contentContainer}>
+        <View style={styles.formContainer}>
+          <Text style={styles.areaLabel}>Register</Text>
+          <TextInput
+            onChangeText={(text) =>
+              setTextInput((prev) => ({ ...prev, name: text }))
+            }
+            style={styles.textInput}
+            placeholder="Name"
+          />
+          <View style={styles.datePickerContainer}>
+            <TextInput
+              style={[styles.textInput, { flexGrow: 1, marginBottom: 0 }]}
+              value={textInput.birthdate?.toLocaleDateString()}
+              editable={false}
+              pointerEvents="none"
+              placeholder="date"
+            />
+            <Pressable style={styles.datePickerButton} onPress={showDatepicker}>
+              <Text style={{ color: "white" }}>Change</Text>
+            </Pressable>
+          </View>
+          <TextInput
+            onChangeText={(text) =>
+              setTextInput((prev) => ({ ...prev, email: text }))
+            }
+            style={styles.textInput}
+            placeholder="Email"
+          />
+          <TextInput
+            onChangeText={(text) =>
+              setTextInput((prev) => ({ ...prev, password: text }))
+            }
+            style={styles.textInput}
+            secureTextEntry={true}
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="Password"
+          />
+
+          <Pressable style={styles.primaryButton}>
+            <Text
+              style={{
+                color: "white",
+              }}
+            >
+              Register
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  pageContainer: {
+    flex: 1,
+    backgroundColor: "lightgray",
+    paddingLeft: 20,
+    paddingRight: 20,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  contentContainer: {
+    height: "100%",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  formContainer: {
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: "white",
+    padding: 20,
+    minWidth: 350,
+    maxWidth: 800,
+    elevation: 5,
+  },
+  areaLabel: {
+    fontSize: 25,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  textInput: {
+    borderWidth: 1,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingVertical: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    minHeight: 45,
+  },
+  primaryButton: {
+    borderRadius: 15,
+    backgroundColor: "black",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 20,
+    minHeight: 45,
+    maxHeight: 45,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  datePickerContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+    minHeight: 45,
+    maxHeight: 45,
+    gap: 10,
+    width: "100%",
+  },
+  datePickerButton: {
+    backgroundColor: "#2196F3",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+    height: "100%",
   },
 });
