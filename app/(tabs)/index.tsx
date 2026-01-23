@@ -1,12 +1,46 @@
-import { useState } from "react";
+import { initDB, loginUser, showTables } from "@/services/database";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [textInput, setTextInput] = useState({
     email: "",
     password: "",
   });
+  const [inputError, setInputError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      await initDB();
+      await showTables();
+    })();
+  }, []);
+
+  const handleLogin = async () => {
+    try {
+      const checkCredentials = await loginUser(
+        textInput.email,
+        textInput.password,
+      );
+
+      if (!checkCredentials) {
+        setInputError("Incorrect username or password!");
+      } else {
+        setInputError("");
+        const user = checkCredentials;
+
+        await AsyncStorage.setItem("currentUser", JSON.stringify(user));
+
+        router.replace("/contacts/list");
+      }
+    } catch (error) {
+      console.error("error: ", error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.pageContainer}>
@@ -17,20 +51,25 @@ export default function HomeScreen() {
             onChangeText={(text) =>
               setTextInput((prev) => ({ ...prev, email: text }))
             }
-            style={styles.textInput}
+            style={[styles.textInput, inputError ? styles.errorInputs : null]}
             placeholder="Email"
           />
           <TextInput
             onChangeText={(text) =>
               setTextInput((prev) => ({ ...prev, password: text }))
             }
-            style={styles.textInput}
+            style={[styles.textInput, inputError ? styles.errorInputs : null]}
             secureTextEntry={true}
             autoCapitalize="none"
             autoCorrect={false}
             placeholder="Password"
           />
-          <Pressable style={styles.primaryButton}>
+
+          {inputError ? (
+            <Text style={{ color: "red", marginBottom: 10 }}>{inputError}</Text>
+          ) : null}
+
+          <Pressable style={styles.primaryButton} onPress={handleLogin}>
             <Text
               style={{
                 color: "white",
@@ -39,6 +78,7 @@ export default function HomeScreen() {
               Login
             </Text>
           </Pressable>
+          {/* </Link> */}
         </View>
       </View>
     </SafeAreaView>
@@ -66,6 +106,9 @@ const styles = StyleSheet.create({
     minWidth: 350,
     maxWidth: 800,
     elevation: 5,
+  },
+  errorInputs: {
+    borderColor: "red",
   },
   areaLabel: {
     fontSize: 25,

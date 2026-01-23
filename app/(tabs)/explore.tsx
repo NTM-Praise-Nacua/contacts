@@ -1,8 +1,10 @@
+import { initDB, insertUser } from "@/services/database";
 import {
   DateTimePickerAndroid,
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { useState } from "react";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,12 +18,19 @@ interface textInputType {
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [textInput, setTextInput] = useState<textInputType>({
     name: "",
     birthdate: new Date(),
     email: "",
     password: "",
   });
+
+  useEffect(() => {
+    (async () => {
+      await initDB();
+    })();
+  }, []);
 
   const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     const currentDate = selectedDate;
@@ -41,6 +50,27 @@ export default function HomeScreen() {
 
   const showDatepicker = () => {
     showMode("date");
+  };
+
+  const handleRegister = async () => {
+    try {
+      const birthdate = textInput.birthdate;
+      if (!birthdate) {
+        throw new Error("Birthdate is required");
+      }
+      const birthDateString = birthdate.toISOString();
+
+      await insertUser(
+        textInput.name,
+        textInput.email,
+        textInput.password,
+        birthDateString,
+      );
+
+      router.replace("/contacts/list");
+    } catch (error) {
+      console.error("error: ", error);
+    }
   };
 
   return (
@@ -85,7 +115,7 @@ export default function HomeScreen() {
             placeholder="Password"
           />
 
-          <Pressable style={styles.primaryButton}>
+          <Pressable style={styles.primaryButton} onPress={handleRegister}>
             <Text
               style={{
                 color: "white",
